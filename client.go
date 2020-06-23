@@ -25,11 +25,12 @@ type Authorize struct {
 	SignerVersion          string
 }
 type NodeConfig struct {
-	NodeUrl     string
-	FeeLimit    int64
-	GasPriceMin int64
-	GasPriceMax int64
-	NodeVersion string
+	NodeUrl       string
+	FeeLimit      int64
+	GasPriceMin   int64
+	GasPriceMax   int64
+	NodeVersion   string
+	NodeNotifyUrl string
 }
 
 type Client struct {
@@ -130,8 +131,12 @@ func (client *Client) signerPost(url string, data interface{}) (Result, error) {
 	signValue := value.FieldByName("Signature")
 	signValue.Set(reflect.ValueOf(Signature))
 	var result Result
-	if err := gout.POST(url).SetJSON(data).BindJSON(&result).Do(); err != nil {
+	code := 0
+	if err := gout.POST(url).SetJSON(data).BindJSON(&result).Code(&code).Do(); err != nil {
 		return Result{}, err
+	}
+	if code != 200 {
+		return result, fmt.Errorf("%d-%s", code, result.Status.Message)
 	}
 	return result, nil
 }
@@ -139,7 +144,14 @@ func (client *Client) signerPost(url string, data interface{}) (Result, error) {
 func (client *Client) Estimate(req EstimateRequest) (EstimateResponse, error) {
 	res := EstimateResponse{}
 	url := fmt.Sprintf("%v/%v/%v", client.NodeUrl, client.NodeVersion, "tx/estimate")
-	return res, gout.POST(url).SetJSON(req).BindJSON(&res).Do()
+	code := 0
+	if err := gout.POST(url).SetJSON(req).BindJSON(&res).Code(&code).Do(); err != nil {
+		return res, err
+	}
+	if code != 200 {
+		return res, fmt.Errorf("%d-%s", code, res.Message)
+	}
+	return res, nil
 }
 
 func (client *Client) SendTx(req TransactRequest) (TransactResponse, error) {
@@ -156,11 +168,11 @@ func (client *Client) SendTx(req TransactRequest) (TransactResponse, error) {
 	if err != nil {
 		return res, err
 	}
-	if req.GasPrice != "" {
+	if req.GasPrice == "" {
 		req.GasPrice = estimateResponse.Data.GasPrice
 	}
-	if req.NotifyUrl != "" {
-		req.NotifyUrl = client.NotifyUrl
+	if req.NotifyUrl == "" {
+		req.NotifyUrl = client.NodeNotifyUrl
 	}
 	req.GasLimit = estimateResponse.Data.Gas
 	req.Nonce = estimateResponse.Data.Nonce
@@ -183,6 +195,26 @@ func (client *Client) SendTx(req TransactRequest) (TransactResponse, error) {
 		return res, err
 	}
 	// 发送交易
+	code := 0
 	url := fmt.Sprintf("%v/%v/%v", client.NodeUrl, client.NodeVersion, "tx/transact")
-	return res, gout.POST(url).SetJSON(req).BindJSON(&res).Do()
+	if err := gout.POST(url).SetJSON(req).BindJSON(&res).Code(&code).Do(); err != nil {
+		return res, err
+	}
+	if code != 200 {
+		return res, fmt.Errorf("%d-%s", code, res.Message)
+	}
+	return res, nil
+}
+
+func (client *Client) TxDetail(txHash string) (DetailResponse, error) {
+	res := DetailResponse{}
+	code := 0
+	url := fmt.Sprintf("%v/%v/%v/%v", client.NodeUrl, client.NodeVersion, "tx", txHash)
+	if err := gout.GET(url).BindJSON(&res).Code(&code).Do(); err != nil {
+		return res, err
+	}
+	if code != 200 {
+		return res, fmt.Errorf("%d-%s", code, res.Message)
+	}
+	return res, nil
 }

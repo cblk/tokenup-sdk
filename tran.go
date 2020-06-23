@@ -31,16 +31,15 @@ type EstimateResponse struct {
 }
 
 type TransactRequest struct {
-	From      string   `json:"from" validate:"eth_addr" description:"交易发送方地址"`
-	To        string   `json:"to" validate:"omitempty,eth_addr" description:"交易目标地址"`
-	Nonce     uint64   `json:"nonce" description:"交易序列号"`
-	Data      string   `json:"data" validate:"omitempty,is_hex" description:"交易数据(16进制字符串)"`
-	Value     string   `json:"value" validate:"omitempty,is_hex_num" description:"要发送到目标地址的以太数量(16进制字符串)"`
-	GasPrice  string   `json:"gas_price" validate:"is_hex_num" description:"交易发送方愿意支付的gas价格(16进制字符串)"`
-	GasLimit  string   `json:"gas_limit" validate:"is_hex_num" description:"交易的gas上限(16进制字符串)"`
-	Signature string   `json:"signature" validate:"signature" description:"交易数据签名(16进制字符串)"`
-	TopicList []string `json:"topic_list" description:"订阅的topic（事件名称哈希）列表"`
-	NotifyUrl string   `json:"notify_url" validate:"omitempty,url" description:"通知回调url"`
+	From      string `json:"from" validate:"eth_addr" description:"交易发送方地址"`
+	To        string `json:"to" validate:"omitempty,eth_addr" description:"交易目标地址"`
+	Nonce     uint64 `json:"nonce" description:"交易序列号"`
+	Data      string `json:"data" validate:"omitempty,is_hex" description:"交易数据(16进制字符串)"`
+	Value     string `json:"value" validate:"omitempty,is_hex_num" description:"要发送到目标地址的以太数量(16进制字符串)"`
+	GasPrice  string `json:"gas_price" validate:"is_hex_num" description:"交易发送方愿意支付的gas价格(16进制字符串)"`
+	GasLimit  string `json:"gas_limit" validate:"is_hex_num" description:"交易的gas上限(16进制字符串)"`
+	Signature string `json:"signature" validate:"signature" description:"交易数据签名(16进制字符串)"`
+	NotifyUrl string `json:"notify_url" validate:"omitempty,url" description:"通知回调url"`
 }
 
 type TransactResponse struct {
@@ -53,6 +52,22 @@ type TransactResponse struct {
 		NotifyStatus int    `json:"notify_status" description:"通知状态：0=未通知 1=已通知"`
 		Type         int    `json:"type" description:"交易类型：0=创建合约 1=合约调用 2=转账"`
 	} `json:"data" description:"发送交易结果"`
+}
+
+type DetailRequest struct {
+	TxHash string `json:"tx_hash" path:"tx_hash" validate:"is_hex" description:"交易哈希"`
+}
+
+type DetailResponse struct {
+	Response
+	Data struct {
+		GasPrice     string `json:"gas_price" description:"交易发送方愿意支付的gas价格(16进制字符串)"`
+		GasLimit     string `json:"gas_limit" description:"交易的gas上限(16进制字符串)"`
+		TxHash       string `json:"tx_hash" description:"交易哈希"`
+		Status       int    `json:"status" description:"交易状态：0=None 1=Pending 2=Confirmed 3=Failed"`
+		NotifyStatus int    `json:"notify_status" description:"通知状态：0=未通知 1=已通知"`
+		Type         int    `json:"type" description:"交易类型：0=创建合约 1=合约调用 2=转账"`
+	} `json:"data" description:"交易详情"`
 }
 
 func (tx TransactRequest) decode(chainId int64) (string, error) {
