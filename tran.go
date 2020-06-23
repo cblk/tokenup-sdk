@@ -70,6 +70,18 @@ type DetailResponse struct {
 	} `json:"data" description:"交易详情"`
 }
 
+type CallRequest struct {
+	From   string `json:"from" validate:"eth_addr" description:"消息调用发送方地址"`
+	To     string `json:"to" validate:"omitempty,eth_addr" description:"消息调用目标地址"`
+	Data   string `json:"data" validate:"omitempty,is_hex" description:"消息调用数据(16进制字符串)"`
+	Method string `json:"method"`
+}
+
+type CallResponse struct {
+	Response
+	Data string `json:"data" description:"消息调用结果"`
+}
+
 func (tx TransactRequest) decode(chainId int64) (string, error) {
 	amount, _ := hexutil.DecodeBig(tx.Value)
 	gasLimit, _ := hexutil.DecodeUint64(tx.GasLimit)

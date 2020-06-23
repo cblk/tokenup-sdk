@@ -3,6 +3,8 @@ package tokenup_sdk
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/guonaihong/gout"
 	"github.com/pborman/uuid"
 	"reflect"
@@ -58,7 +60,7 @@ func Init(c *Client) {
 
 func GetClient() *Client {
 	if client == nil {
-		panic("tokenup-sdk config is nil")
+		panic("client is nil, please call tokenup_sdk.Init first")
 	}
 	return client
 }
@@ -217,4 +219,21 @@ func (client *Client) TxDetail(txHash string) (DetailResponse, error) {
 		return res, fmt.Errorf("%d-%s", code, res.Message)
 	}
 	return res, nil
+}
+
+func (client *Client) Call(req CallRequest, abi abi.ABI, out interface{}) error {
+	res := CallResponse{}
+	code := 0
+	url := fmt.Sprintf("%v/%v/%v", client.NodeUrl, client.NodeVersion, "tx/call")
+	if err := gout.POST(url).SetJSON(req).BindJSON(&res).Code(&code).Do(); err != nil {
+		return err
+	}
+	if code != 200 {
+		return fmt.Errorf("%d-%s", code, res.Message)
+	}
+	data, err := hexutil.Decode(res.Data)
+	if err != nil {
+		return err
+	}
+	return abi.Unpack(out, req.Method, data)
 }
