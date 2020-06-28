@@ -1,4 +1,4 @@
-module tokenup-sdk
+module github.com/cblk/tokenup-sdk
 
 go 1.14
 
