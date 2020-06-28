@@ -176,8 +176,10 @@ func (client *Client) SendTx(req TransactRequest) (TransactResponse, error) {
 	if req.NotifyUrl == "" {
 		req.NotifyUrl = client.NodeNotifyUrl
 	}
+	if req.Nonce == 0 {
+		req.Nonce = estimateResponse.Data.Nonce
+	}
 	req.GasLimit = estimateResponse.Data.Gas
-	req.Nonce = estimateResponse.Data.Nonce
 
 	//交易数据签名
 	txHashData, err := req.decode(estimateResponse.Data.ChainId)

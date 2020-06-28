@@ -10,7 +10,7 @@ import (
 )
 
 func TestClient_SendTx(t *testing.T) {
-	txData, err := tokenup_sdk.GetTxData("mint", common.HexToAddress("0x5bb297a46512233e9f52f74e0cafd6ecb2d2db07"), big.NewInt(1))
+	txData, err := tokenup_sdk.GetTxData("mint", common.HexToAddress("0x5bb297a46512233e9f52f74e0cafd6ecb2d2db07"), big.NewInt(3))
 	if err != nil {
 		t.Error(err)
 		return
