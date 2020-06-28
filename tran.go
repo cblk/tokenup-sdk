@@ -1,10 +1,12 @@
 package tokenup_sdk
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
+	"strings"
 )
 
 type Response struct {
@@ -109,4 +111,13 @@ func (tx TransactRequest) decode(chainId int64) (string, error) {
 	mySigner := types.NewEIP155Signer(big.NewInt(chainId))
 	h := mySigner.Hash(tran)
 	return hexutil.Encode(h[:]), nil
+}
+
+func GetData(abiStr, name string, args ...interface{}) (string, error) {
+	contractABI, err := abi.JSON(strings.NewReader(abiStr))
+	if err != nil {
+		return "", nil
+	}
+	data, err := contractABI.Pack(name, args...)
+	return hexutil.Encode(data), err
 }
