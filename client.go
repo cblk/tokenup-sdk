@@ -110,6 +110,29 @@ func (client *Client) BatchSignHash(signSource SignSource) (Result, error) {
 	return client.signerPost(url, &ps)
 }
 
+func (client *Client) ValidReceivedCallBack(confirm interface{}, message string) (ReceivedConfirm, error) {
+	signature := reflect.ValueOf(confirm).Elem().FieldByName("Signature").Interface().(string)
+	nonce := reflect.ValueOf(confirm).Elem().FieldByName("Nonce").Interface().(string)
+	reflect.ValueOf(confirm).Elem().FieldByName("Received").SetMapIndex(reflect.ValueOf("app_key"), reflect.ValueOf(client.Authorize.AppKey))
+	timeValue := reflect.ValueOf(confirm).Elem().FieldByName("Received").MapIndex(reflect.ValueOf("timestamp"))
+	var t float64
+	_, _ = fmt.Sscanf(fmt.Sprint(timeValue.Interface()), "%e", &t)
+	reflect.ValueOf(confirm).Elem().FieldByName("Received").SetMapIndex(reflect.ValueOf("timestamp"), reflect.ValueOf(uint64(t)))
+	fmt.Printf("sdk---:%s", EncodeString(confirm))
+	err := RsaSignVerAndPublicHex([]byte(EncodeString(confirm)), signature, client.Authorize.CallBackPartyPublicKey)
+	if err != nil {
+		return ReceivedConfirm{}, err
+	}
+	rc := ReceivedConfirm{
+		Nonce:   nonce,
+		Message: message,
+		AppKey:  client.Authorize.AppKey,
+	}
+	signReceived, _ := RsaSignAndPrivate([]byte(EncodeString(rc)), client.Authorize.PrivateKey)
+	rc.Signature = signReceived
+	return rc, nil
+}
+
 func (client *Client) OnTracing(requestId string) (Result, error) {
 	traceSafe := TraceSafe{
 		RequestId: requestId,

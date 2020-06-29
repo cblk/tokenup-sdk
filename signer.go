@@ -52,6 +52,12 @@ type TraceSafe struct {
 	RequestId string `json:"request_id" sign:"request_id"`
 	Signature string `json:"signature"`
 }
+type ReceivedConfirm struct {
+	Message   string `json:"message" sign:"message"`
+	Nonce     string `json:"nonce" sign:"nonce"`
+	AppKey    string `json:"-" sign:"app_key"`
+	Signature string `json:"signature"`
+}
 
 var channel = make(chan int64, 32)
 
