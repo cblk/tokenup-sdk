@@ -99,6 +99,17 @@ func (client *Client) SignHash(signSource SignSource) (Result, error) {
 	return client.signerPost(url, &ps)
 }
 
+func (client *Client) BatchSignHash(signSource SignSource) (Result, error) {
+	var ps ProxySignSafe
+	structCopy(&signSource, &ps)
+	url := client.SignerUrl
+	if client.SignerVersion != "" {
+		url += "/batch_sign"
+	}
+	url += "/vendor/proxy/pending_sign_hash"
+	return client.signerPost(url, &ps)
+}
+
 func (client *Client) OnTracing(requestId string) (Result, error) {
 	traceSafe := TraceSafe{
 		RequestId: requestId,
@@ -109,6 +120,23 @@ func (client *Client) OnTracing(requestId string) (Result, error) {
 	}
 	url += "/vendor/status/tracing"
 	return client.signerPost(url, &traceSafe)
+}
+
+func (client *Client) GetTxStatus(requestId string) (Result, error) {
+	url := client.SignerUrl
+	if client.SignerVersion != "" {
+		url += "/v2.0.0"
+	}
+	url += "/vendor/tx/status/" + requestId
+	var result Result
+	code := 0
+	if err := gout.GET(url).BindJSON(&result).Code(&code).Do(); err != nil {
+		return Result{}, err
+	}
+	if code != 200 {
+		return result, fmt.Errorf("%d-%s", code, result.Status.Message)
+	}
+	return result, nil
 }
 
 func (client *Client) signerPost(url string, data interface{}) (Result, error) {
