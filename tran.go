@@ -84,6 +84,28 @@ type CallResponse struct {
 	Data string `json:"data" description:"消息调用结果"`
 }
 
+type QueryRequest struct {
+	BlockHash string     `json:"block_hash" validate:"omitempty,is_hex" description:"区块哈希"`
+	FromBlock int64      `json:"from_block" validate:"gte=0" description:"开始区块高度"`
+	ToBlock   int64      `json:"to_block" validate:"gte=0" description:"结束区块高度"`
+	Addresses []string   `json:"addresses" description:"合约地址列表"`
+	Topics    [][]string `json:"topics" description:"事件的topic列表"`
+}
+
+type QueryResponse struct {
+	Response
+	Data []Event `json:"data" description:"查询到的事件列表"`
+}
+
+type Event struct {
+	Data        string `json:"data"`
+	Topics      string `json:"topics"`
+	TxHash      string `json:"tx_hash" description:"事件对应的交易哈希"`
+	Address     string `json:"address" description:"事件对应的合约地址"`
+	LogIndex    uint   `json:"log_index" description:"事件在区块中的序列号"`
+	BlockNumber uint64 `json:"block_number" description:"区块高度"`
+}
+
 func (tx TransactRequest) decode(chainId int64) (string, error) {
 	amount, _ := hexutil.DecodeBig(tx.Value)
 	gasLimit, _ := hexutil.DecodeUint64(tx.GasLimit)

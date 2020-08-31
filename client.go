@@ -290,3 +290,16 @@ func (client *Client) Call(req CallRequest, abi abi.ABI, out interface{}) error 
 	}
 	return abi.Unpack(out, req.Method, data)
 }
+
+func (client *Client) EventQuery(req QueryRequest) (QueryResponse, error) {
+	res := QueryResponse{}
+	url := fmt.Sprintf("%v/%v/%v", client.NodeUrl, client.NodeVersion, "event/query")
+	code := 0
+	if err := gout.POST(url).SetJSON(req).BindJSON(&res).Code(&code).Do(); err != nil {
+		return res, err
+	}
+	if code != 200 {
+		return res, fmt.Errorf("%d-%s", code, res.Message)
+	}
+	return res, nil
+}
