@@ -63,6 +63,10 @@ type DetailRequest struct {
 type DetailResponse struct {
 	Response
 	Data struct {
+		From         string `json:"from" description:"交易发送方地址"`
+		To           string `json:"to" description:"交易目标地址"`
+		Nonce        uint64 `json:"nonce" description:"交易序列号"`
+		Data         string `json:"data"`
 		GasPrice     string `json:"gas_price" description:"交易发送方愿意支付的gas价格(16进制字符串)"`
 		GasLimit     string `json:"gas_limit" description:"交易的gas上限(16进制字符串)"`
 		TxHash       string `json:"tx_hash" description:"交易哈希"`
